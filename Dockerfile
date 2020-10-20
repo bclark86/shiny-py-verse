@@ -13,7 +13,8 @@ RUN apt-get update -qq && apt-get -y --no-install-recommends install \
     libcurl4-openssl-dev \
     libssl-dev \
     && install2.r --error --deps TRUE \
-        reticulate
+        reticulate \ 
+        scales
 
 ## update system libraries
 RUN apt-get update && \
