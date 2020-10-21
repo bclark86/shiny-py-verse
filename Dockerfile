@@ -20,22 +20,26 @@ RUN apt-get update -qq && apt-get -y --no-install-recommends install \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get clean
-    
-# python through conda
-ENV PATH="/root/miniconda3/bin:${PATH}"
-ARG PATH="/root/miniconda3/bin:${PATH}"
 
-RUN apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+# System packages 
+RUN apt-get update && apt-get install -y curl
 
-RUN wget \
-    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
-    && mkdir /root/.conda \
-    && bash Miniconda3-latest-Linux-x86_64.sh -b \
-    && rm -f Miniconda3-latest-Linux-x86_64.sh 
-RUN conda --version
+ENV PATH /opt/conda/envs/env/bin:$PATH
 
+# Install miniconda to /miniconda
+RUN curl -LO http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
+RUN bash Miniconda-latest-Linux-x86_64.sh -p /miniconda -b
+RUN rm Miniconda-latest-Linux-x86_64.sh
+ENV PATH=/miniconda/bin:${PATH}
+RUN conda update -y conda
+
+# create conda environment
 ADD environment.yml /tmp/environment.yml
 RUN conda env create -f /tmp/environment.yml
-# Pull the environment name out of the environment.yml
-RUN echo "source activate $(head -1 /tmp/environment.yml | cut -d' ' -f2)" > ~/.bashrc
+
+# activate
+RUN echo "conda activate $(head -1 /tmp/environment.yml | cut -d' ' -f2)" >> ~/.bashrc
 ENV PATH /opt/conda/envs/$(head -1 /tmp/environment.yml | cut -d' ' -f2)/bin:$PATH
+
+# set as default
+ENV CONDA_DEFAULT_ENV $(head -1 /tmp/environment.yml | cut -d' ' -f2)
